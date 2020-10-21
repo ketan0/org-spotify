@@ -43,6 +43,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # * Functions
+PATH="/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/gnu-getopt/bin:$PATH"
 
 function usage {
     cat <<EOF
