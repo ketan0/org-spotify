@@ -3,27 +3,38 @@
 ;; Copyright (C) 2020 Ketan Agrawal
 ;;
 ;; Author: Ketan Agrawal <http://www.github.com/ketan0>
-;; Maintainer: Ketan Agrawal <agrawalk@stanford.edu>
+;; Maintainer: Ketan Agrawal <ketanjayagrawal@gmail.com>
 ;; Created: September 29, 2020
 ;; Modified: September 29, 2020
 ;; Version: 0.0.1
 ;; Keywords:
-;; Homepage: https://github.com/ketanagrawal/org-spotify
-;; Package-Requires: ((emacs 27.1) (cl-lib "0.5"))
+;; Homepage: https://github.com/ketan0/org-spotify
+;; Package-Requires: ((emacs "26.1") (dash "2.17") (org-ml "4.0") (counsel-spotify "0.5") (ivy "0.13"))
 ;;
-;; This file is not part of GNU Emacs.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
 ;;  Org-mode spotify stuff
-;;  Currently only supports OS X.
 ;;
-;;; Code:
 ;;; Library Requires
 (require 'dash)
 (require 'org-ml)
 (require 'counsel-spotify)
+(require 'ivy)
 
+;;; Code:
 ;;; Customizable variables
 (defgroup org-spotify nil
   "Play spotify songs through org mode interfaces."
@@ -48,6 +59,7 @@
    (ivy-read (format "Search %s: " (symbol-name type))
              (counsel-spotify-search-by :type `(,type)) :dynamic-collection t)
    (counsel-spotify-unwrap-spotify-object it)
+
    (org-ml-build-link (uri it) (name it))
    (org-ml-to-string it)
    (insert it)))
@@ -89,6 +101,9 @@ and choose and insert an org-mode link to something of that type on Spotify."
                          :follow 'org-spotify-follow)
 
 ;; Experimental functionality below
+(defun org-spotify-push-playlist-at-point ()
+  (interactive)
+  nil)
 
 (defun org-spotify-set-file-href ()
   "Sets the current file's #+SPOTIFY_HREF keyword, if none exists."
