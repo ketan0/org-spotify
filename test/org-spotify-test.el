@@ -36,21 +36,25 @@
 
 (message "Running tests on Emacs %s" emacs-version)
 (defconst org-spotify-test--spotify-id-regex (rx line-start (= 22 alphanumeric) line-end))
+(setq org-spotify-user-id (getenv "SPOTIFY_USER_ID"))
+(setq org-spotify-oauth2-client-id (getenv "SPOTIFY_OAUTH2_CLIENT_ID"))
+(setq org-spotify-oauth2-client-secret (getenv "SPOTIFY_OAUTH2_CLIENT_SECRET"))
 
 (describe "org-spotify-push-playlist-at-point"
   (it "creates and/or updates the org-mode Spotify playlist at point."
     (with-temp-buffer
-      (->> (org-ml-build-headline :level 1 :title '("Underwater"))
+      (->> (org-ml-build-headline :level 1 :title '("Water"))
            (org-ml-set-children
-            (list (org-ml-build-headline :level 2 :title '("[[spotify:album:4Carzsnpd6yvuHZ49I0oz8][\"Awaken, My Love!\"]]"))
-                  (org-ml-build-headline :level 2 :title '("[[spotify:album:53VKICyqCf91sVkTdFrzKX][Titanic Rising]]"))))
+            (list (org-ml-build-headline :level 2 :title '("[[spotify:track:1kwnxJNVl7cwcU98RvMBaR][Surf]]"))
+                  (org-ml-build-headline :level 2 :title '("[[spotify:track:3nAq2hCr1oWsIU54tS98pL][Waves]]"))))
            (org-ml-to-string)
            (insert))
       (org-mode)
       (goto-char (point-min))
-      (expect (org-spotify-push-playlist-at-point) :to-be t)
+      (call-interactively 'org-spotify-push-playlist-at-point)
       (let* ((playlist-subtree (org-ml-parse-this-subtree))
              (playlist-id (org-ml-headline-get-node-property "PLAYLIST_ID")))
+        ;; if we've gotten a valid spotify ID, the playlist was created in spotify.
         (expect playlist-id :to-match org-spotify-test--spotify-id-regex)))))
 
 ;;; org-spotify-test.el ends here
