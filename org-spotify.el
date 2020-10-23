@@ -9,7 +9,7 @@
 ;; Version: 0.0.1
 ;; Keywords:
 ;; Homepage: https://github.com/ketan0/org-spotify
-;; Package-Requires: ((emacs "26.1") (dash "2.17") (org-ml "4.0") (counsel-spotify "0.5") (ivy "0.13"))
+;; Package-Requires: ((emacs "26.1") (dash "2.17") (org-ml "4.0") (counsel-spotify "0.5") (ivy "0.13") (request "0.3") (simple-httpd "1.5") (oauth2 "0.1"))
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 (require 'org-ml)
 (require 'counsel-spotify)
 (require 'ivy)
+(require 'spotify-api)
 
 ;;; Code:
 ;;; Customizable variables
@@ -46,7 +47,6 @@
   "If true, org-spotify plays music upon opening an org file with a valid #+SPOTIFY_HREF keyword defined at the top."
   :type 'boolean
   :group 'org-spotify)
-
 ;; Functions
 (defun org-spotify-play-href (href)
   "Plays HREF on Spotify, using counsel-spotify."
@@ -100,10 +100,52 @@ and choose and insert an org-mode link to something of that type on Spotify."
 (org-link-set-parameters "spotify"
                          :follow 'org-spotify-follow)
 
+
 ;; Experimental functionality below
-(defun org-spotify-push-playlist-at-point ()
-  (interactive)
-  nil)
+(defun org-spotify--extract-spotify-uri (link-headline)
+  (->> (org-ml-get-property :title link-headline)
+       (car)
+       (org-ml-get-property :raw-link)))
+
+(defun org-spotify--create-playlist (name callback &optional description)
+  (message (format "Posting %s to /users/%s/playlists" name (url-hexify-string org-spotify-user-id)))
+  (spotify-api-call-async
+   "POST"
+   (format "/users/%s/playlists" (url-hexify-string org-spotify-user-id))
+   (json-encode (--filter (cdr it) `(("name" . ,name) ("description" . ,description))))
+   callback))
+
+(defun org-spotify--add-items-to-playlist (playlist-id uris &optional replace)
+  ;; if replace flag is set, replace existing items rather than appending
+  (message (format "Adding to playlists/%s/tracks" (url-hexify-string playlist-id)))
+  (spotify-api-call-async
+   (if replace "PUT" "POST")
+   (format "/playlists/%s/tracks" (url-hexify-string playlist-id))
+   (json-encode (--filter (cdr it) `(("uris" . ,uris))))
+   (lambda (something)
+     (message "Well...we got this thing: ")
+     (pp something))))
+
+(defun org-spotify-push-playlist-at-point (saved-point)
+  (interactive "d")
+  (-let* ((saved-buffer (current-buffer))
+          (playlist-subtree (org-ml-parse-this-subtree))
+          (playlist-name (org-ml-get-property :raw-value playlist-subtree))
+          (playlist-uris (-map 'org-spotify--extract-spotify-uri
+                               (org-ml-headline-get-subheadlines playlist-subtree))))
+    (-if-let (playlist-id (org-ml-headline-get-node-property "PLAYLIST_ID" playlist-subtree))
+        (org-spotify--add-items-to-playlist playlist-id playlist-uris t)
+      (org-spotify--create-playlist
+       playlist-name
+       (lambda (new-playlist)
+         (if new-playlist
+             (-let [playlist-id (gethash 'id new-playlist)]
+               (message "Setting playlist id to %s" playlist-id)
+               (with-current-buffer saved-buffer
+                 (org-ml-update-headline-at* saved-point
+                   (org-ml-headline-set-node-property "PLAYLIST_ID" playlist-id it)))
+               (org-spotify--add-items-to-playlist playlist-id playlist-uris))
+           (message "Error creating the playlist")))))))
 
 (defun org-spotify-set-file-href ()
   "Sets the current file's #+SPOTIFY_HREF keyword, if none exists."
