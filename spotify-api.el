@@ -1,5 +1,5 @@
 ;;; spotify-api.el --- Spotify.el API integration layer  -*- lexical-binding: t; -*-
-;; Package-Requires: ((emacs "26.1") (dash "2.17") (org-ml "4.0") (counsel-spotify "0.5") (ivy "0.13") (request "0.3"))
+;; Package-Requires: ((emacs "26.1") (dash "2.17") (org-ml "4.0") (counsel-spotify "0.5") (ivy "0.13") (request "0.3") (simple-httpd "1.5") (oauth2 "0.1"))
 ;;; NOTE: the code in this file has been copied and adapted from the spotify.el project: https://github.com/danielfm/spotify.el
 
 ;; Copyright (C) 2014-2019 Daniel Fernandes Martins
@@ -12,6 +12,7 @@
 ;;; Code:
 
 (require 'simple-httpd)
+(require 'oauth2)
 
 ;; Due to an issue related to compilation and the way oauth2 uses defadvice
 ;; (including a FIXME as of 0.1.1), this declaration exists to prevent
@@ -29,7 +30,8 @@
 
 (defcustom org-spotify-user-id nil
   "A placeholder while I'm feeling lazy"
-  )
+  :group 'org-spotify
+  :type 'string)
 
 (defcustom org-spotify-oauth2-client-id ""
   "The unique identifier for your application.
@@ -165,12 +167,12 @@ that runs a local httpd for code -> token exchange."
   (let ((now (string-to-number (format-time-string "%s"))))
     (if (null *spotify-oauth2-token*)
         (let ((token (spotify-oauth2-auth spotify-oauth2-auth-url
-                                  spotify-oauth2-token-url
-                                  org-spotify-oauth2-client-id
-                                  org-spotify-oauth2-client-secret
-                                  spotify-oauth2-scopes
-                                  nil
-                                  spotify-oauth2-callback)))
+                                          spotify-oauth2-token-url
+                                          org-spotify-oauth2-client-id
+                                          org-spotify-oauth2-client-secret
+                                          spotify-oauth2-scopes
+                                          nil
+                                          spotify-oauth2-callback)))
           (setq *spotify-oauth2-token* token)
           (setq *spotify-oauth2-ts* now)
           (if (null token)
