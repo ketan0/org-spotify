@@ -30,6 +30,7 @@
 ;;
 ;;; Library Requires
 (require 'dash)
+(require 's)
 (require 'org-ml)
 (require 'counsel-spotify)
 (require 'ivy)
@@ -93,13 +94,27 @@ and choose and insert an org-mode link to something of that type on Spotify."
    (intern)
    (org-spotify-insert-type)))
 
+
+(defvar org-spotify-iframe-format
+  (concat "<iframe style=\"border-radius:12px\" "
+          "src=\"https://open.spotify.com/embed/%s/%s?utm_source=generator\" "
+          "width=\"100%%\" height=\"380\" "
+          "frameBorder=\"0\" allowfullscreen=\"\" "
+          "allow=\"autoplay; clipboard-write; encrypted-media; "
+          "fullscreen; picture-in-picture\">"
+          "</iframe>"))
+
 (defun org-spotify-follow (link)
   "Follows a spotify: LINK by playing that href on spotify."
   (org-spotify-play-href (concat "spotify:" link)))
 
-(org-link-set-parameters "spotify"
-                         :follow 'org-spotify-follow)
+(defun org-spotify-export (path desc backend)
+  (cl-case backend
+    (html (-let [(type href) (s-split ":" path)]
+            (format org-spotify-iframe-format type href)))))
 
+(org-link-set-parameters
+ "spotify" :follow 'org-spotify-follow :export 'org-spotify-export)
 
 ;; Experimental functionality below
 (defun org-spotify--extract-spotify-uri (link-headline)
@@ -119,6 +134,8 @@ and choose and insert an org-mode link to something of that type on Spotify."
   ;; if replace flag is set, replace existing items rather than appending
   (message (format "Adding to playlists/%s/tracks" (url-hexify-string playlist-id)))
   (spotify-api-call-async
+   ;; TODO: only insert songs that are new, and remove songs that are no longer in the playlist
+   ;; (rather than deleting everything and re-inserting everything that's in the playlist)
    (if replace "PUT" "POST")
    (format "/playlists/%s/tracks" (url-hexify-string playlist-id))
    (--filter (cdr it) `(("uris" . ,uris)))
@@ -132,16 +149,17 @@ and choose and insert an org-mode link to something of that type on Spotify."
           (playlist-name (org-ml-get-property :raw-value playlist-subtree))
           (playlist-uris (-map 'org-spotify--extract-spotify-uri
                                (org-ml-headline-get-subheadlines playlist-subtree))))
-    (-if-let (playlist-id (org-ml-headline-get-node-property "PLAYLIST_ID" playlist-subtree))
+    (-if-let (playlist-id (org-ml-headline-get-node-property "SPOTIFY_PLAYLIST_ID" playlist-subtree))
+        ;; TODO: allow user to rename playlist
         (org-spotify--add-items-to-playlist playlist-id playlist-uris t)
-      (org-spotify--create-playlist
+      (org-spotify--create-playlist ;; TODO: allow user to add playlist description
        playlist-name
        (lambda (new-playlist)
          (if new-playlist
              (-let [playlist-id (alist-get 'id new-playlist)]
                (with-current-buffer saved-buffer
                  (org-ml-update-headline-at* saved-point
-                   (org-ml-headline-set-node-property "PLAYLIST_ID" playlist-id it)))
+                   (org-ml-headline-set-node-property "SPOTIFY_PLAYLIST_ID" playlist-id it)))
                (message "Successfully created playlist '%s'!" playlist-name)
                (org-spotify--add-items-to-playlist playlist-id playlist-uris))
            (message "Error creating the playlist")))))))
