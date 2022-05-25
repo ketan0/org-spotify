@@ -14,6 +14,7 @@
 (require 'simple-httpd)
 (require 'oauth2)
 (require 'request)
+(require 'counsel-spotify)
 
 ;; Due to an issue related to compilation and the way oauth2 uses defadvice
 ;; (including a FIXME as of 0.1.1), this declaration exists to prevent
@@ -34,19 +35,19 @@
   :group 'org-spotify
   :type 'string)
 
-(defcustom org-spotify-oauth2-client-id ""
-  "The unique identifier for your application.
-More info at https://developer.spotify.com/web-api/tutorial/."
-  :group 'org-spotify
-  :type 'string)
+;; (defcustom org-spotify-oauth2-client-id ""
+;;   "The unique identifier for your application.
+;; More info at https://developer.spotify.com/web-api/tutorial/."
+;;   :group 'org-spotify
+;;   :type 'string)
 
-(defcustom org-spotify-oauth2-client-secret ""
-  "The OAuth2 key provided by Spotify.
-This is the key that you will need to pass in secure calls to the Spotify
-Accounts and Web API services.  More info at
-https://developer.spotify.com/web-api/tutorial/."
-  :group 'org-spotify
-  :type 'string)
+;; (defcustom org-spotify-oauth2-client-secret ""
+;;   "The OAuth2 key provided by Spotify.
+;; This is the key that you will need to pass in secure calls to the Spotify
+;; Accounts and Web API services.  More info at
+;; https://developer.spotify.com/web-api/tutorial/."
+;;   :group 'org-spotify
+;;   :type 'string)
 
 (defcustom org-spotify-api-search-limit 50
   "Number of items returned when searching for something using the Spotify API."
@@ -169,8 +170,8 @@ that runs a local httpd for code -> token exchange."
     (if (null *spotify-oauth2-token*)
         (let ((token (spotify-oauth2-auth spotify-oauth2-auth-url
                                           spotify-oauth2-token-url
-                                          org-spotify-oauth2-client-id
-                                          org-spotify-oauth2-client-secret
+                                          counsel-spotify-client-id
+                                          counsel-spotify-client-secret
                                           spotify-oauth2-scopes
                                           nil
                                           spotify-oauth2-callback)))
