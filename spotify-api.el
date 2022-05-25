@@ -13,6 +13,7 @@
 
 (require 'simple-httpd)
 (require 'oauth2)
+(require 'request)
 
 ;; Due to an issue related to compilation and the way oauth2 uses defadvice
 ;; (including a FIXME as of 0.1.1), this declaration exists to prevent
