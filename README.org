@@ -1,0 +1,30 @@
+#+TITLE: org-spotify
+
+* Introduction
+With this package, you can manage your Spotify content within your org-mode notes.
+* Dependencies
+[[https://github.com/Lautaro-Garcia/counsel-spotify][counsel-spotify]], [[https://github.com/ndwarshuis/org-ml][org-ml]], [[https://github.com/magnars/dash.el][dash.el]]
+* Installation
+This package is not yet available on MELPA. However, using straight.el and use-package to install this package is fairly straightforward:
+#+begin_src emacs-lisp
+(use-package org-spotify
+  :straight (:host github :repo "ketan0/org-spotify"))
+#+end_src
+
+Otherwise, you can simply clone this repo, and drop it in your load path like so:
+#+begin_src emacs-lisp
+(add-to-list 'load-path "<org-spotify.el-dir>")
+(require 'org-spotify)
+#+end_src
+* Setup
+TODO
+* Usage
+** Creating a Spotify link
+You can call any of the following interactive commands to search for content on spotify and insert "Spotify links" that, when clicked, will play the appropriate music:
+- =org-spotify-insert=
+- =org-spotify-insert-artist=
+- =org-spotify-insert-album=
+- =org-spotify-insert-track=
+- =org-spotify-insert-playlist=
+** (experimental) Playing Spotify music upon entering a file
+Call =org-spotify-set-file-href= interactively to specify a Spotify URI to be played when the current file is opened. (Just for fun. The idea is that you could associate certain songs/audio with certain notes, and thus evoke certain memories about that note...)
