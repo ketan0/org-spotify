@@ -1,9 +1,7 @@
 #+TITLE: org-spotify
 
-* Introduction
-With this package, you can manage your Spotify content within your org-mode notes.
-* Dependencies
-[[https://github.com/Lautaro-Garcia/counsel-spotify][counsel-spotify]], [[https://github.com/ndwarshuis/org-ml][org-ml]], [[https://github.com/magnars/dash.el][dash.el]]
+org-spotify aims to bring Spotify to the plain-text medium (albeit in a barebones way.) You can create org-mode links that will automatically play spotify tracks, albums, etc., and organize those into playlists.
+
 * Installation
 This package is not yet available on MELPA. However, using straight.el and use-package to install this package is fairly straightforward:
 #+begin_src emacs-lisp
@@ -13,11 +11,15 @@ This package is not yet available on MELPA. However, using straight.el and use-p
 
 Otherwise, you can simply clone this repo, and drop it in your load path like so:
 #+begin_src emacs-lisp
-(add-to-list 'load-path "<org-spotify.el-dir>")
+(add-to-list 'load-path "/path/to/org-spotify")
 (require 'org-spotify)
 #+end_src
+* Dependencies
+counsel-spotify, org-ml, dash, s, ivy, emacs-web-server, oauth2, request
 * Setup
-TODO
+You'll need to follow the instructions to configure ~counsel-spotify~ here: https://github.com/Lautaro-Garcia/counsel-spotify#notes-on-spotify-web-api-authentication
+
+Additionally, set ~org-spotify-user-id~ to your Spotify username.
 * Usage
 ** Creating a Spotify link
 You can call any of the following interactive commands to search for content on spotify and insert "Spotify links" that, when clicked, will play the appropriate music:
@@ -26,5 +28,11 @@ You can call any of the following interactive commands to search for content on 
 - =org-spotify-insert-album=
 - =org-spotify-insert-track=
 - =org-spotify-insert-playlist=
+** Creating + maintaining Spotify playlists
+With your cursor on a headline which contains some tracks below it, call ~org-spotify-push-playlist-at-point~.
+
+[TODO: screenshot/gif demonstrating]
 ** (experimental) Playing Spotify music upon entering a file
 Call =org-spotify-set-file-href= interactively to specify a Spotify URI to be played when the current file is opened. (Just for fun. The idea is that you could associate certain songs/audio with certain notes, and thus evoke certain memories about that note...)
+* Planned future features
+** Playgraphs (as an extension of mere playlists)
