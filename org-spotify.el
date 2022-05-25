@@ -57,7 +57,7 @@
   (counsel-spotify-verify-credentials)
   (-->
    (ivy-read (format "Search %s: " (symbol-name type))
-             (counsel-spotify-search-by :type `(,type)) :dynamic-collection t)
+             (counsel-spotify-search-by :type (list type)) :dynamic-collection t)
    (counsel-spotify-unwrap-spotify-object it)
 
    (org-ml-build-link (uri it) (name it))
@@ -104,7 +104,7 @@ and choose and insert an org-mode link to something of that type on Spotify."
 ;; Experimental functionality below
 (defun org-spotify--extract-spotify-uri (link-headline)
   (->> (org-ml-get-property :title link-headline)
-       (car)
+       (-first-item)
        (org-ml-get-property :raw-link)))
 
 (defun org-spotify--create-playlist (name callback &optional description)
@@ -112,7 +112,7 @@ and choose and insert an org-mode link to something of that type on Spotify."
   (spotify-api-call-async
    "POST"
    (format "/users/%s/playlists" (url-hexify-string org-spotify-user-id))
-   (json-encode (--filter (cdr it) `(("name" . ,name) ("description" . ,description))))
+   (--filter (cdr it) `(("name" . ,name) ("description" . ,description)))
    callback))
 
 (defun org-spotify--add-items-to-playlist (playlist-id uris &optional replace)
@@ -121,10 +121,9 @@ and choose and insert an org-mode link to something of that type on Spotify."
   (spotify-api-call-async
    (if replace "PUT" "POST")
    (format "/playlists/%s/tracks" (url-hexify-string playlist-id))
-   (json-encode (--filter (cdr it) `(("uris" . ,uris))))
+   (--filter (cdr it) `(("uris" . ,uris)))
    (lambda (something)
-     (message "Well...we got this thing: ")
-     (pp something))))
+     (message "Successfully updated playlist to have %s tracks!" (length uris)))))
 
 (defun org-spotify-push-playlist-at-point (saved-point)
   (interactive "d")
@@ -139,11 +138,11 @@ and choose and insert an org-mode link to something of that type on Spotify."
        playlist-name
        (lambda (new-playlist)
          (if new-playlist
-             (-let [playlist-id (gethash 'id new-playlist)]
-               (message "Setting playlist id to %s" playlist-id)
+             (-let [playlist-id (alist-get 'id new-playlist)]
                (with-current-buffer saved-buffer
                  (org-ml-update-headline-at* saved-point
                    (org-ml-headline-set-node-property "PLAYLIST_ID" playlist-id it)))
+               (message "Successfully created playlist '%s'!" playlist-name)
                (org-spotify--add-items-to-playlist playlist-id playlist-uris))
            (message "Error creating the playlist")))))))
 
@@ -166,8 +165,8 @@ and choose and insert an org-mode link to something of that type on Spotify."
 Otherwise, return nil."
   ;; TODO: compatibility for older versions of org, where org-collect-keywords doesn't exist
   (-some->> (org-collect-keywords '("SPOTIFY_HREF"))
-    (car)
-    (cadr)))
+    (-first-item)
+    (-second-item)))
 
 (defun org-spotify--maybe-play-file-href ()
   "Hook on `find-file-hook' to potentially play music.

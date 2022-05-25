@@ -190,36 +190,56 @@ that runs a local httpd for code -> token exchange."
 (defun spotify-api-call-async (method uri &optional data callback is-retry)
   "Make a request to the given Spotify service endpoint URI via METHOD.
 Call CALLBACK with the parsed JSON response."
-  (oauth2-url-retrieve
-   (spotify-oauth2-token)
-   (concat spotify-api-endpoint uri)
-   (lambda (_)
-     (toggle-enable-multibyte-characters t)
-     (goto-char (point-min))
-     (condition-case _
-         (when (search-forward-regexp "^$" nil t)
-           (let* ((json-object-type 'hash-table)
-                  (json-array-type 'list)
-                  (json-key-type 'symbol)
-                  (json (json-read))
-                  (error-json (gethash 'error json)))
-             (kill-buffer)
+  (message method)
+  (message (concat spotify-api-endpoint uri))
+  (message (format "%s" data))
+  (request
+    (concat spotify-api-endpoint uri)
+    :type method
+    :headers `(("Content-Type" . "application/json")
+               ("Authorization" . ,(concat "Bearer " (oauth2-token-access-token (spotify-oauth2-token)))))
+    :data (json-encode data)
+    :parser 'json-read
+    :success (cl-function
+              (lambda (&key data &allow-other-keys)
+                (message "Got: %s" data)
+                (funcall callback data)))
+    :error (cl-function
+            (lambda (&rest args &key error-thrown &allow-other-keys)
+              (message "Got error: %S" error-thrown)))))
+              ;; TODO: if the error is 401 (unauthorized), retry the request (need token refresh)
 
-             ;; Retries the request when the token expires and gets refreshed
-             (if (and (hash-table-p error-json)
-                      (eq 401 (gethash 'status error-json))
-                      (not is-retry))
-                 (spotify-api-call-async method uri data callback t)
-               (when callback (funcall callback json)))))
+;; old stuff from spotify.el
+;; (oauth2-url-retrieve
+;;    (spotify-oauth2-token)
+;;    (concat spotify-api-endpoint uri)
+;;    (lambda (_)
+;;      (toggle-enable-multibyte-characters t)
+;;      (goto-char (point-min))
+;;      (condition-case _
+;;          (when (search-forward-regexp "^$" nil t)
+;;            (let* ((json-object-type 'hash-table)
+;;                   (json-array-type 'list)
+;;                   (json-key-type 'symbol)
+;;                   (json (json-read))
+;;                   (error-json (gethash 'error json)))
+;;              (kill-buffer)
 
-       ;; Handle empty responses
-       (end-of-file
-        (kill-buffer)
-        (when callback (funcall callback nil)))))
-   nil
-   method
-   (or data "")
-   '(("Content-Type" . "application/json"))))
+;;              ;; Retries the request when the token expires and gets refreshed
+;;              (if (and (hash-table-p error-json)
+;;                       (eq 401 (gethash 'status error-json))
+;;                       (not is-retry))
+;;                  (spotify-api-call-async method uri data callback t)
+;;                (when callback (funcall callback json)))))
+
+;;        ;; Handle empty responses
+;;        (end-of-file
+;;         (kill-buffer)
+;;         (when callback (funcall callback nil)))))
+;;    nil
+;;    method
+;;    (or data "")
+;;    '(("Content-Type" . "application/json")))
 
 (defun spotify-current-user (callback)
   "Call CALLBACK with the currently logged in user."

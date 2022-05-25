@@ -42,7 +42,7 @@
 
 (describe "org-spotify-push-playlist-at-point"
   (it "creates and/or updates the org-mode Spotify playlist at point."
-    (with-temp-buffer
+    (with-current-buffer (get-buffer-create "*org-spotify test*")
       (->> (org-ml-build-headline :level 1 :title '("Water"))
            (org-ml-set-children
             (list (org-ml-build-headline :level 2 :title '("[[spotify:track:1kwnxJNVl7cwcU98RvMBaR][Surf]]"))
@@ -53,7 +53,7 @@
       (goto-char (point-min))
       (call-interactively 'org-spotify-push-playlist-at-point)
       (let* ((playlist-subtree (org-ml-parse-this-subtree))
-             (playlist-id (org-ml-headline-get-node-property "PLAYLIST_ID")))
+             (playlist-id (org-ml-headline-get-node-property "PLAYLIST_ID" playlist-subtree)))
         ;; if we've gotten a valid spotify ID, the playlist was created in spotify.
         (expect playlist-id :to-match org-spotify-test--spotify-id-regex)))))
 
