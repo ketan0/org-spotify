@@ -182,19 +182,17 @@ and choose and insert an org-mode link to something of that type on Spotify."
   "Return the value of the #+SPOTIFY_HREF keyword if currently in an org file that has it.
 Otherwise, return nil."
   ;; TODO: compatibility for older versions of org, where org-collect-keywords doesn't exist
-  (-some->> (org-collect-keywords '("SPOTIFY_HREF"))
-    (-first-item)
-    (-second-item)))
+  (-some->> (org-collect-keywords '("SPOTIFY_HREF")) (-first-item) (-second-item)))
 
 (defun org-spotify--maybe-play-file-href ()
   "Hook on `find-file-hook' to potentially play music.
 Plays if in an `org-mode' file that specifies a spotify href."
-  (when (and org-spotify-play-music-on-file-open (eq major-mode 'org-mode))
+  (when (eq major-mode 'org-mode)
     (-some->> (org-spotify-get-file-href)
       (org-spotify-play-href))))
 
-(define-minor-mode org-spotify-mode
-  "Minor mode for org-spotify.
+(define-minor-mode org-spotify-auto-music-mode
+  "Minor mode for auto-playing spotify music in designated org files.
 Sets up `org-spotify--maybe-play-file-href' upon opening of a file."
   :lighter " Org-spotify"
   :keymap (let ((map (make-sparse-keymap)))
@@ -202,7 +200,7 @@ Sets up `org-spotify--maybe-play-file-href' upon opening of a file."
   :group 'org-spotify
   :require 'org-spotify
   :global t
-  (if org-spotify-mode
+  (if org-spotify-auto-music-mode
       (add-hook 'find-file-hook 'org-spotify--maybe-play-file-href)
     (remove-hook 'find-file-hook 'org-spotify--maybe-play-file-href)))
 
