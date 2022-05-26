@@ -15,7 +15,7 @@ Otherwise, you can simply clone this repo, and drop it in your load path like so
 (require 'org-spotify)
 #+end_src
 * Dependencies
-counsel-spotify, org-ml, dash, s, ivy, emacs-web-server, oauth2, request
+[[https://github.com/Lautaro-Garcia/counsel-spotify][counsel-spotify]], [[https://github.com/ndwarshuis/org-ml][org-ml]], [[https://github.com/magnars/dash.el][dash.el]], [[https://github.com/magnars/s.el][s.el]], [[https://github.com/abo-abo/swiper][ivy]], [[https://github.com/tkf/emacs-request][request.el]], [[https://github.com/skeeto/emacs-web-server][emacs-web-server]]
 * Setup
 You'll need to follow the instructions to configure ~counsel-spotify~ here: https://github.com/Lautaro-Garcia/counsel-spotify#notes-on-spotify-web-api-authentication
 
@@ -35,4 +35,4 @@ With your cursor on a headline which contains some tracks below it, call ~org-sp
 ** (experimental) Playing Spotify music upon entering a file
 Call =org-spotify-set-file-href= interactively to specify a Spotify URI to be played when the current file is opened. (Just for fun. The idea is that you could associate certain songs/audio with certain notes, and thus evoke certain memories about that note...)
 * Planned future features
-** Playgraphs (as an extension of mere playlists)
+** Organize your songs into "playgraphs" (as an extension of mere playlists)
